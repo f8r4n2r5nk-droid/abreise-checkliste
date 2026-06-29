@@ -225,7 +225,6 @@ const DEFAULT_LOE_VIL = [
     "Biomüll wegbringen",
     "Gelber Sack / Verpackungen wegbringen",
     "Papier & Glas wegbringen",
-    "Tierversorgung geklärt (falls vorhanden)",
   ]},
   { t: "Sicherheit & Organisatorisches", e: "🔐", items: [
     "Nachbar/Vertrauensperson informiert",
@@ -254,7 +253,8 @@ const DEFAULT_LOE_VIL = [
     "Sicher angekommen: Familie Bescheid geben",
     "Wasser, Strom & Gas aufdrehen",
     "Wohnung gründlich lüften",
-    "Motorräder ans Ladegerät hängen",
+    "Motorräder vom Ladegerät nehmen / startklar machen",
+    "Katzen versorgen / begrüßen",
     "Kühlschrank einschalten & befüllen",
     "Grundvorräte einkaufen",
     "Freunde & Nachbarn kontaktieren",
@@ -319,7 +319,7 @@ const DEFAULT_VIL_LOE = [
     "Bewässerung / Nachbar für Pflanzen organisiert",
     "Alle Mülleimer leeren (auch Bad)",
     "Müll & Recycling wegbringen (Contentores)",
-    "Tierversorgung geklärt (falls vorhanden)",
+    "Katzensitter für 2 Katzen organisiert",
   ]},
   { t: "Sicherheit & Organisatorisches", e: "🔐", items: [
     "Nachbar / Vertrauensperson informiert",
@@ -363,6 +363,38 @@ const ROUTES = [
   { id: "loe-vil", label: "Lörrach → Vilamoura", from: "Lörrach", to: "Vilamoura", def: DEFAULT_LOE_VIL },
   { id: "vil-loe", label: "Vilamoura → Lörrach", from: "Vilamoura", to: "Lörrach", def: DEFAULT_VIL_LOE },
 ];
+
+// Gezielte Inhalts-Anpassungen, die auch auf bereits gespeicherten Listen greifen (idempotent).
+const CONTENT_REV = 1;
+function applyContentMigrations(st) {
+  if ((st.contentRev || 0) < 1) {
+    const lv = st.routes["loe-vil"];
+    if (lv) {
+      const pmt = lv.sections.find(s => s.t === "Pflanzen, Müll & Tiere");
+      if (pmt) pmt.items = pmt.items.filter(i => !/^Tierversorgung geklärt/.test(i.x));  // keine Tiere in Lörrach
+      const ank = lv.sections.find(s => s.t === "Nach Ankunft in Portugal");
+      if (ank) {
+        const m = ank.items.find(i => i.x === "Motorräder ans Ladegerät hängen");
+        if (m) m.x = "Motorräder vom Ladegerät nehmen / startklar machen";
+        if (!ank.items.some(i => /Katze/.test(i.x))) {
+          const idx = ank.items.findIndex(i => i.x.startsWith("Motorräder vom Ladegerät"));
+          ank.items.splice(idx >= 0 ? idx + 1 : ank.items.length, 0, { x: "Katzen versorgen / begrüßen", done: false });
+        }
+      }
+    }
+    const vl = st.routes["vil-loe"];
+    if (vl) {
+      const pmt2 = vl.sections.find(s => s.t === "Pflanzen, Müll & Tiere");
+      if (pmt2) {
+        const tier = pmt2.items.find(i => /^Tierversorgung geklärt/.test(i.x));
+        if (tier) tier.x = "Katzensitter für 2 Katzen organisiert";
+        else if (!pmt2.items.some(i => /Katze/.test(i.x))) pmt2.items.push({ x: "Katzensitter für 2 Katzen organisiert", done: false });
+      }
+    }
+  }
+  st.contentRev = CONTENT_REV;
+  return st;
+}
 
 // ---------- Speicherung: IndexedDB (groß genug für Bilder/Dateien) ----------
 const DB_NAME = "abreise-checkliste-db", STORE = "kv", KEY = "state";
@@ -424,6 +456,7 @@ async function load() {
     mergeDefaults(st.routes[r.id], r.def);
   });
   if (!st.active || !st.routes[st.active]) st.active = "loe-vil";
+  applyContentMigrations(st);
   return st;
 }
 let saveTimer = null, initialized = false;
