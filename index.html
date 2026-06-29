@@ -131,6 +131,17 @@
 const STORAGE = "abreise-checkliste-v1";
 
 const DEFAULT = [
+  { t: "Vor der Abreise erledigen", e: "🛒", items: [
+    "Einkaufen für die Fahrt (Snacks, Getränke)",
+    "Bargeld abheben (Euro)",
+    "Auto volltanken",
+    "Auto checken: Reifen, Öl, Wischwasser",
+    "Medikamente / Rezepte besorgen",
+    "Wichtige Post & Rechnungen erledigen",
+    "Freunde & Familie über Abreise informieren",
+    "Reiseroute / Übernachtung planen",
+    "Handy & Powerbank vollladen",
+  ]},
   { t: "Küche & Kühlschrank", e: "🧊", items: [
     "Kühlschrank leeren (verderbliche Lebensmittel)",
     "Kühlschrank ausschalten / abtauen lassen",
@@ -195,11 +206,30 @@ const DEFAULT = [
     "Letzter Blick: Herd, Fenster, Türen",
     "Tür abgeschlossen – losfahren! 🚗",
   ]},
+  { t: "Nach Ankunft in Portugal", e: "🌴", items: [
+    "Sicher angekommen: Familie Bescheid geben",
+    "Wasser, Strom & Gas aufdrehen",
+    "Wohnung gründlich lüften",
+    "Kühlschrank einschalten & befüllen",
+    "Grundvorräte einkaufen",
+    "Freunde & Nachbarn kontaktieren",
+    "Internet / WLAN-Router prüfen",
+    "Pflanzen & Garten checken",
+    "Müll- & Recycling-Termine herausfinden",
+  ]},
 ];
 
+function freshSection(d) { return { t: d.t, e: d.e, items: d.items.map(x => ({ x, done: false })) }; }
 function load() {
-  try { const s = JSON.parse(localStorage.getItem(STORAGE)); if (s && s.sections) return s; } catch(e){}
-  return { sections: DEFAULT.map(s => ({ t: s.t, e: s.e, items: s.items.map(x => ({ x, done: false })) })) };
+  let saved;
+  try { saved = JSON.parse(localStorage.getItem(STORAGE)); } catch(e){}
+  if (!saved || !saved.sections) return { sections: DEFAULT.map(freshSection) };
+  // Bestehenden Fortschritt behalten, aber neue Standard-Bereiche an ihrer Position ergänzen.
+  const have = new Set(saved.sections.map(s => s.t));
+  DEFAULT.forEach((d, idx) => {
+    if (!have.has(d.t)) saved.sections.splice(Math.min(idx, saved.sections.length), 0, freshSection(d));
+  });
+  return saved;
 }
 function save() { localStorage.setItem(STORAGE, JSON.stringify(state)); }
 
