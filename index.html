@@ -176,7 +176,7 @@ const STORAGE = "abreise-checkliste-v1";
 const DEFAULT_LOE_VIL = [
   { t: "Vor der Abreise erledigen", e: "🛒", items: [
     "Flüge buchen",
-    "Bolt / Uber zum Flughafen buchen",
+    "Maciek (Taxi) zum Flughafen buchen",
     "Online einchecken",
     "Koffer packen & Gewicht prüfen",
     "Bargeld abheben (Euro)",
@@ -368,7 +368,7 @@ const ROUTES = [
 ];
 
 // Gezielte Inhalts-Anpassungen, die auch auf bereits gespeicherten Listen greifen (idempotent).
-const CONTENT_REV = 3;
+const CONTENT_REV = 4;
 function applyContentMigrations(st) {
   if ((st.contentRev || 0) < 1) {
     const lv = st.routes["loe-vil"];
@@ -423,7 +423,7 @@ function applyContentMigrations(st) {
     rm(lvVor, "Auto checken: Reifen, Öl, Wischwasser");
     rm(lvVor, "Reiseroute / Übernachtung planen");
     ren(lvVor, "Motorrad zu Alex bringen", "Africa Twin zu Alex bringen");
-    ["Koffer packen & Gewicht prüfen", "Online einchecken", "Bolt / Uber zum Flughafen buchen", "Flüge buchen"].forEach(x => addTop(lvVor, x));
+    ["Koffer packen & Gewicht prüfen", "Online einchecken", "Maciek (Taxi) zum Flughafen buchen", "Flüge buchen"].forEach(x => addTop(lvVor, x));
     ren(find(lv, "Letzter Rundgang"), "Tür abgeschlossen – losfahren! 🚗", "Tür abgeschlossen – zum Flughafen! ✈️");
     add(find(lv, "Nach Ankunft in Portugal"), "Auto startklar machen (Batterie, Reifen)", "Motorräder vom Ladegerät nehmen / startklar machen");
 
@@ -440,6 +440,21 @@ function applyContentMigrations(st) {
     add(vlMoto, "Auto-Batterie ans Erhaltungsladegerät / abklemmen", "Auto volltanken & abstellen");
     ren(find(vl, "Letzter Rundgang"), "Tür abgeschlossen – losfahren! 🚗", "Tür abgeschlossen – zum Flughafen! ✈️");
     ren(find(vl, "Nach Ankunft in Lörrach"), "Motorrad bei Alex abholen", "Africa Twin bei Alex abholen");
+  }
+  if ((st.contentRev || 0) < 4) {
+    // In Lörrach kein Bolt/Uber → Maciek (Taxi). Vilamoura behält Bolt/Uber.
+    const lv = st.routes["loe-vil"];
+    const lvVor = lv && lv.sections.find(s => s.t === "Vor der Abreise erledigen");
+    if (lvVor) {
+      const it = lvVor.items.find(i => i.x === "Bolt / Uber zum Flughafen buchen");
+      if (it) it.x = "Maciek (Taxi) zum Flughafen buchen";
+      // Sicherheit: nur einen „Maciek …“-Eintrag behalten
+      let seen = false;
+      lvVor.items = lvVor.items.filter(i => {
+        if (i.x === "Maciek (Taxi) zum Flughafen buchen") { if (seen) return false; seen = true; }
+        return true;
+      });
+    }
   }
   st.contentRev = CONTENT_REV;
   return st;
