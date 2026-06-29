@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#2563eb">
+<title>Abreise-Checkliste · Lörrach → Portugal</title>
+<style>
+  :root {
+    --bg: #f4f6fb;
+    --card: #ffffff;
+    --text: #1e293b;
+    --muted: #64748b;
+    --border: #e2e8f0;
+    --accent: #2563eb;
+    --accent-soft: #dbeafe;
+    --done: #16a34a;
+    --done-soft: #dcfce7;
+    --shadow: 0 1px 3px rgba(0,0,0,.08), 0 8px 24px rgba(0,0,0,.04);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0f172a;
+      --card: #1e293b;
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+      --border: #334155;
+      --accent: #3b82f6;
+      --accent-soft: #1e3a5f;
+      --done: #22c55e;
+      --done-soft: #14352a;
+      --shadow: 0 1px 3px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.2);
+    }
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+    padding: 0 0 4rem;
+  }
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: var(--card);
+    border-bottom: 1px solid var(--border);
+    padding: 1rem 1.25rem .9rem;
+    box-shadow: 0 1px 8px rgba(0,0,0,.04);
+  }
+  .wrap { max-width: 720px; margin: 0 auto; }
+  h1 { font-size: 1.15rem; margin: 0 0 .15rem; display: flex; align-items: center; gap: .5rem; }
+  .sub { color: var(--muted); font-size: .82rem; margin: 0; }
+  .progress-row { display: flex; align-items: center; gap: .75rem; margin-top: .75rem; }
+  .bar { flex: 1; height: 9px; background: var(--border); border-radius: 99px; overflow: hidden; }
+  .bar > span { display: block; height: 100%; width: 0; background: var(--accent); border-radius: 99px; transition: width .3s ease, background .3s ease; }
+  .bar.complete > span { background: var(--done); }
+  .count { font-size: .82rem; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  main { max-width: 720px; margin: 1.25rem auto 0; padding: 0 1rem; }
+  .section { background: var(--card); border: 1px solid var(--border); border-radius: 14px; margin-bottom: 1rem; box-shadow: var(--shadow); overflow: hidden; }
+  .section > h2 {
+    margin: 0; font-size: .95rem; padding: .85rem 1rem; display: flex; align-items: center; gap: .55rem;
+    border-bottom: 1px solid var(--border); background: transparent;
+  }
+  .section > h2 .emoji { font-size: 1.1rem; }
+  .section > h2 .sec-count { margin-left: auto; font-size: .75rem; color: var(--muted); font-weight: 500; font-variant-numeric: tabular-nums; }
+  ul { list-style: none; margin: 0; padding: .25rem .5rem .5rem; }
+  li { display: flex; align-items: flex-start; gap: .7rem; padding: .55rem .55rem; border-radius: 10px; cursor: pointer; transition: background .12s; }
+  li:hover { background: var(--bg); }
+  li .box {
+    flex: none; width: 22px; height: 22px; border: 2px solid var(--border); border-radius: 7px;
+    margin-top: 1px; display: grid; place-items: center; transition: all .15s;
+  }
+  li .box svg { width: 14px; height: 14px; stroke: #fff; stroke-width: 3.5; fill: none; opacity: 0; transition: opacity .12s; }
+  li.done .box { background: var(--done); border-color: var(--done); }
+  li.done .box svg { opacity: 1; }
+  li .label { flex: 1; font-size: .92rem; }
+  li.done .label { color: var(--muted); text-decoration: line-through; }
+  li .del { flex: none; opacity: 0; border: none; background: none; color: var(--muted); cursor: pointer; font-size: 1.05rem; padding: 0 .2rem; line-height: 1; }
+  li:hover .del { opacity: .6; }
+  li .del:hover { opacity: 1; color: #ef4444; }
+  .add-row { display: flex; gap: .4rem; padding: .3rem .6rem .7rem; }
+  .add-row input {
+    flex: 1; border: 1px solid var(--border); background: var(--bg); color: var(--text);
+    border-radius: 9px; padding: .5rem .65rem; font-size: .88rem; outline: none;
+  }
+  .add-row input:focus { border-color: var(--accent); }
+  .add-row button {
+    border: none; background: var(--accent-soft); color: var(--accent); font-weight: 600;
+    border-radius: 9px; padding: 0 .9rem; cursor: pointer; font-size: .88rem;
+  }
+  .toolbar { display: flex; gap: .5rem; flex-wrap: wrap; margin: 0 0 1.25rem; }
+  .toolbar button {
+    border: 1px solid var(--border); background: var(--card); color: var(--text);
+    border-radius: 9px; padding: .5rem .9rem; cursor: pointer; font-size: .85rem; box-shadow: var(--shadow);
+  }
+  .toolbar button:hover { border-color: var(--accent); color: var(--accent); }
+  .done-banner {
+    text-align: center; padding: 1rem; margin-bottom: 1rem; border-radius: 12px;
+    background: var(--done-soft); color: var(--done); font-weight: 600; display: none;
+  }
+  .done-banner.show { display: block; }
+  footer { text-align: center; color: var(--muted); font-size: .75rem; margin-top: 1.5rem; padding: 0 1rem; }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <h1>🧳 Abreise-Checkliste</h1>
+    <p class="sub">Lörrach-Wohnung verlassen · längere Reise nach Portugal</p>
+    <div class="progress-row">
+      <div class="bar" id="bar"><span></span></div>
+      <span class="count" id="count">0 / 0</span>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="done-banner" id="banner">✅ Alles erledigt – gute Reise!</div>
+  <div id="list"></div>
+  <div class="toolbar">
+    <button onclick="resetChecks()">↺ Häkchen zurücksetzen</button>
+    <button onclick="resetAll()">🗑 Auf Standard zurücksetzen</button>
+  </div>
+  <footer>Fortschritt wird automatisch in diesem Browser gespeichert.</footer>
+</main>
+
+<script>
+const STORAGE = "abreise-checkliste-v1";
+
+const DEFAULT = [
+  { t: "Küche & Kühlschrank", e: "🧊", items: [
+    "Kühlschrank leeren (verderbliche Lebensmittel)",
+    "Kühlschrank ausschalten / abtauen lassen",
+    "Kühlschranktür offen lassen (gegen Schimmel)",
+    "Gefrierfach abtauen & Tür offen lassen",
+    "Herd & Backofen aus, Gas zudrehen",
+    "Kaffeemaschine / Wasserkocher aus & leeren",
+    "Spülmaschine leeren",
+    "Obstschale leeren",
+  ]},
+  { t: "Fenster, Türen & Rollläden", e: "🪟", items: [
+    "Alle Fenster schließen (auch Dachfenster/Kipp)",
+    "Balkon-/Terrassentür abschließen",
+    "Rollläden/Jalousien herunterlassen",
+    "Wohnungstür abschließen (2× ziehen)",
+    "Briefkasten geleert / Nachsendung aktiv",
+  ]},
+  { t: "Strom & Elektrogeräte", e: "🔌", items: [
+    "Stand-by-Geräte vom Strom (TV, Konsole, Ladegeräte)",
+    "Mehrfachsteckdosen ausschalten",
+    "WLAN-Router (lassen? für Smart-Home prüfen)",
+    "Bügeleisen / Heizlüfter sicher aus",
+    "Zeitschaltuhr für Lampen einstellen (Sicherheit)",
+  ]},
+  { t: "Wasser & Heizung", e: "🚰", items: [
+    "Haupt-Wasserhahn zudrehen",
+    "Waschmaschinen-Wasserhahn zudrehen",
+    "Heizung auf Frostschutz / Sparmodus stellen",
+    "Boiler / Warmwasser reduzieren oder aus",
+    "Spül- & Waschmaschine: Türen offen lassen",
+  ]},
+  { t: "Pflanzen, Müll & Tiere", e: "🪴", items: [
+    "Pflanzen gründlich gießen",
+    "Bewässerung / Nachbar für Pflanzen organisiert",
+    "Alle Mülleimer leeren (auch Bad)",
+    "Restmüll wegbringen",
+    "Biomüll wegbringen",
+    "Gelber Sack / Verpackungen wegbringen",
+    "Papier & Glas wegbringen",
+    "Tierversorgung geklärt (falls vorhanden)",
+  ]},
+  { t: "Sicherheit & Organisatorisches", e: "🔐", items: [
+    "Nachbar/Vertrauensperson informiert",
+    "Schlüssel hinterlegt (Notfall)",
+    "Wertsachen sicher verstaut",
+    "Rauchmelder funktionsfähig",
+    "Termine / Lieferungen pausiert",
+  ]},
+  { t: "Reisegepäck & Dokumente", e: "🛂", items: [
+    "Reisepass / Personalausweis",
+    "Geldbeutel, Bankkarten, Bargeld (Euro)",
+    "Ladegeräte & Powerbank",
+    "Medikamente",
+    "Auto-Papiere & grüne Versicherungskarte",
+    "Schlüssel 2. Wohnsitz Portugal",
+    "Handy-Ladestand & Offline-Karten",
+  ]},
+  { t: "Letzter Rundgang", e: "🚪", items: [
+    "Müll runtertragen / wegbringen",
+    "Alle Lichter aus (außer Zeitschaltuhr)",
+    "Wasser nirgends läuft",
+    "Letzter Blick: Herd, Fenster, Türen",
+    "Tür abgeschlossen – losfahren! 🚗",
+  ]},
+];
+
+function load() {
+  try { const s = JSON.parse(localStorage.getItem(STORAGE)); if (s && s.sections) return s; } catch(e){}
+  return { sections: DEFAULT.map(s => ({ t: s.t, e: s.e, items: s.items.map(x => ({ x, done: false })) })) };
+}
+function save() { localStorage.setItem(STORAGE, JSON.stringify(state)); }
+
+let state = load();
+
+function render() {
+  const list = document.getElementById("list");
+  list.innerHTML = "";
+  let total = 0, done = 0;
+
+  state.sections.forEach((sec, si) => {
+    sec.items.forEach(it => { total++; if (it.done) done++; });
+    const secDone = sec.items.filter(i => i.done).length;
+
+    const card = document.createElement("section");
+    card.className = "section";
+    card.innerHTML = `<h2><span class="emoji">${sec.e}</span>${escapeHtml(sec.t)}<span class="sec-count">${secDone}/${sec.items.length}</span></h2>`;
+    const ul = document.createElement("ul");
+
+    sec.items.forEach((it, ii) => {
+      const li = document.createElement("li");
+      li.className = it.done ? "done" : "";
+      li.innerHTML = `
+        <span class="box"><svg viewBox="0 0 24 24"><polyline points="4 12 10 18 20 6"/></svg></span>
+        <span class="label">${escapeHtml(it.x)}</span>
+        <button class="del" title="Entfernen">×</button>`;
+      li.querySelector(".label").addEventListener("click", () => { it.done = !it.done; save(); render(); });
+      li.querySelector(".box").addEventListener("click", () => { it.done = !it.done; save(); render(); });
+      li.querySelector(".del").addEventListener("click", (ev) => { ev.stopPropagation(); sec.items.splice(ii,1); save(); render(); });
+      ul.appendChild(li);
+    });
+
+    const addRow = document.createElement("div");
+    addRow.className = "add-row";
+    addRow.innerHTML = `<input type="text" placeholder="Eigenen Punkt hinzufügen…"><button>+</button>`;
+    const input = addRow.querySelector("input");
+    const addFn = () => { const v = input.value.trim(); if (!v) return; sec.items.push({ x: v, done: false }); save(); render(); };
+    addRow.querySelector("button").addEventListener("click", addFn);
+    input.addEventListener("keydown", e => { if (e.key === "Enter") addFn(); });
+    ul.appendChild(addRow);
+
+    card.appendChild(ul);
+    list.appendChild(card);
+  });
+
+  const pct = total ? Math.round(done/total*100) : 0;
+  document.querySelector("#bar > span").style.width = pct + "%";
+  document.getElementById("bar").classList.toggle("complete", done === total && total > 0);
+  document.getElementById("count").textContent = `${done} / ${total}`;
+  document.getElementById("banner").classList.toggle("show", done === total && total > 0);
+}
+
+function resetChecks() {
+  state.sections.forEach(s => s.items.forEach(i => i.done = false));
+  save(); render();
+}
+function resetAll() {
+  if (!confirm("Alle eigenen Änderungen verwerfen und Standardliste wiederherstellen?")) return;
+  localStorage.removeItem(STORAGE);
+  state = load(); save(); render();
+}
+function escapeHtml(s){ return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+render();
+</script>
+</body>
+</html>
