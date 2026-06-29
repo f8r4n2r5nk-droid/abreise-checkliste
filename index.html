@@ -175,15 +175,15 @@ const STORAGE = "abreise-checkliste-v1";
 
 const DEFAULT_LOE_VIL = [
   { t: "Vor der Abreise erledigen", e: "🛒", items: [
-    "Einkaufen für die Fahrt (Snacks, Getränke)",
+    "Flüge buchen",
+    "Bolt / Uber zum Flughafen buchen",
+    "Online einchecken",
+    "Koffer packen & Gewicht prüfen",
     "Bargeld abheben (Euro)",
-    "Auto volltanken",
-    "Auto checken: Reifen, Öl, Wischwasser",
     "Medikamente / Rezepte besorgen",
     "Wichtige Post & Rechnungen erledigen",
     "Freunde & Familie über Abreise informieren",
-    "Motorrad zu Alex bringen",
-    "Reiseroute / Übernachtung planen",
+    "Africa Twin zu Alex bringen",
     "Handy & Powerbank vollladen",
   ]},
   { t: "Küche & Kühlschrank", e: "🧊", items: [
@@ -247,13 +247,14 @@ const DEFAULT_LOE_VIL = [
     "Alle Lichter aus (außer Zeitschaltuhr)",
     "Wasser nirgends läuft",
     "Letzter Blick: Herd, Fenster, Türen",
-    "Tür abgeschlossen – losfahren! 🚗",
+    "Tür abgeschlossen – zum Flughafen! ✈️",
   ]},
   { t: "Nach Ankunft in Portugal", e: "🌴", items: [
     "Sicher angekommen: Familie Bescheid geben",
     "Wasser, Strom & Gas aufdrehen",
     "Wohnung gründlich lüften",
     "Motorräder vom Ladegerät nehmen / startklar machen",
+    "Auto startklar machen (Batterie, Reifen)",
     "Katzen versorgen / begrüßen",
     "Kühlschrank einschalten & befüllen",
     "Grundvorräte einkaufen",
@@ -269,20 +270,20 @@ const DEFAULT_VIL_LOE = [
   { t: "Vor der Abreise erledigen", e: "🛒", items: [
     "Flüge buchen",
     "Bolt / Uber zum Flughafen buchen",
-    "Einkaufen für die Fahrt (Snacks, Getränke)",
+    "Online einchecken",
+    "Koffer packen & Gewicht prüfen",
     "Bargeld abheben",
-    "Auto volltanken",
-    "Auto checken: Reifen, Öl, Wischwasser",
     "Medikamente / Rezepte besorgen",
     "Wichtige Post & Rechnungen erledigen",
     "Freunde & Nachbarn über Abreise informieren",
-    "Reiseroute / Übernachtung planen",
     "Handy & Powerbank vollladen",
   ]},
   { t: "Motorräder & Garage", e: "🏍️", items: [
     "Motorräder volltanken",
     "Motorräder ans Erhaltungs-Ladegerät hängen",
     "Motorräder abdecken / sichern",
+    "Auto volltanken & abstellen",
+    "Auto-Batterie ans Erhaltungsladegerät / abklemmen",
     "Garage / Stellplatz abschließen",
   ]},
   { t: "Küche & Kühlschrank", e: "🧊", items: [
@@ -344,7 +345,7 @@ const DEFAULT_VIL_LOE = [
     "Alle Lichter aus (außer Zeitschaltuhr)",
     "Wasser nirgends läuft",
     "Letzter Blick: Herd, Klima, Fenster, Türen",
-    "Tür abgeschlossen – losfahren! 🚗",
+    "Tür abgeschlossen – zum Flughafen! ✈️",
   ]},
   { t: "Nach Ankunft in Lörrach", e: "🏠", items: [
     "Sicher angekommen: Familie Bescheid geben",
@@ -353,7 +354,7 @@ const DEFAULT_VIL_LOE = [
     "Wohnung gründlich lüften",
     "Kühlschrank einschalten & befüllen",
     "Grundvorräte einkaufen",
-    "Motorrad bei Alex abholen",
+    "Africa Twin bei Alex abholen",
     "Freunde & Nachbarn kontaktieren",
     "Internet / WLAN-Router prüfen",
     "Post / Nachsendung holen",
@@ -367,7 +368,7 @@ const ROUTES = [
 ];
 
 // Gezielte Inhalts-Anpassungen, die auch auf bereits gespeicherten Listen greifen (idempotent).
-const CONTENT_REV = 2;
+const CONTENT_REV = 3;
 function applyContentMigrations(st) {
   if ((st.contentRev || 0) < 1) {
     const lv = st.routes["loe-vil"];
@@ -405,6 +406,40 @@ function applyContentMigrations(st) {
         });
       }
     }
+  }
+  if ((st.contentRev || 0) < 3) {
+    // Beide Richtungen per Flug; Fahrzeuge: Lörrach = Africa Twin, Vilamoura = Auto + 2 Motorräder
+    const lv = st.routes["loe-vil"], vl = st.routes["vil-loe"];
+    const find = (r, t) => r && r.sections.find(s => s.t === t);
+    const rm  = (s, x) => { if (s) s.items = s.items.filter(i => i.x !== x); };
+    const ren = (s, a, b) => { if (s) { const it = s.items.find(i => i.x === a); if (it) it.x = b; } };
+    const add = (s, x, after) => { if (!s || s.items.some(i => i.x === x)) return; const idx = after ? s.items.findIndex(i => i.x === after) : -1; if (idx >= 0) s.items.splice(idx + 1, 0, { x, done: false }); else s.items.push({ x, done: false }); };
+    const addTop = (s, x) => { if (s && !s.items.some(i => i.x === x)) s.items.unshift({ x, done: false }); };
+
+    // Lörrach → Vilamoura
+    const lvVor = find(lv, "Vor der Abreise erledigen");
+    rm(lvVor, "Einkaufen für die Fahrt (Snacks, Getränke)");
+    rm(lvVor, "Auto volltanken");
+    rm(lvVor, "Auto checken: Reifen, Öl, Wischwasser");
+    rm(lvVor, "Reiseroute / Übernachtung planen");
+    ren(lvVor, "Motorrad zu Alex bringen", "Africa Twin zu Alex bringen");
+    ["Koffer packen & Gewicht prüfen", "Online einchecken", "Bolt / Uber zum Flughafen buchen", "Flüge buchen"].forEach(x => addTop(lvVor, x));
+    ren(find(lv, "Letzter Rundgang"), "Tür abgeschlossen – losfahren! 🚗", "Tür abgeschlossen – zum Flughafen! ✈️");
+    add(find(lv, "Nach Ankunft in Portugal"), "Auto startklar machen (Batterie, Reifen)", "Motorräder vom Ladegerät nehmen / startklar machen");
+
+    // Vilamoura → Lörrach
+    const vlVor = find(vl, "Vor der Abreise erledigen");
+    rm(vlVor, "Einkaufen für die Fahrt (Snacks, Getränke)");
+    rm(vlVor, "Auto volltanken");
+    rm(vlVor, "Auto checken: Reifen, Öl, Wischwasser");
+    rm(vlVor, "Reiseroute / Übernachtung planen");
+    add(vlVor, "Online einchecken", "Bolt / Uber zum Flughafen buchen");
+    add(vlVor, "Koffer packen & Gewicht prüfen", "Online einchecken");
+    const vlMoto = find(vl, "Motorräder & Garage");
+    add(vlMoto, "Auto volltanken & abstellen", "Motorräder abdecken / sichern");
+    add(vlMoto, "Auto-Batterie ans Erhaltungsladegerät / abklemmen", "Auto volltanken & abstellen");
+    ren(find(vl, "Letzter Rundgang"), "Tür abgeschlossen – losfahren! 🚗", "Tür abgeschlossen – zum Flughafen! ✈️");
+    ren(find(vl, "Nach Ankunft in Lörrach"), "Motorrad bei Alex abholen", "Africa Twin bei Alex abholen");
   }
   st.contentRev = CONTENT_REV;
   return st;
